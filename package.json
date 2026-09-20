@@ -1,0 +1,11 @@
+{
+  "name": "tanstack-bug-prototype",
+  "version": "1.0.0",
+  "description": "Prototype recreating and resolving TanStack Query stale data bug with OAuth token refresh",
+  "scripts": {
+    "dev:server": "node server/server.js",
+    "dev:client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client",
+    "test": "node test/test-reproduction.js"
+  }
+}
