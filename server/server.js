@@ -48,19 +48,21 @@ app.use((req, res, next) => {
   next();
 });
 
+const router = express.Router();
+
 // Config endpoints
-app.get('/api/config', (req, res) => {
+router.get('/config', (req, res) => {
   res.json(serverConfig);
 });
 
-app.post('/api/config', (req, res) => {
+router.post('/config', (req, res) => {
   serverConfig = { ...serverConfig, ...req.body };
   console.log(`[CONFIG] Updated server config:`, serverConfig);
   res.json({ success: true, config: serverConfig });
 });
 
 // 1. Auth Endpoint: Login
-app.post('/api/auth/login', (req, res) => {
+router.post('/auth/login', (req, res) => {
   const ttlSeconds = parseInt(req.body.ttlSeconds) || 900; // default 15 minutes
   const accessToken = generateToken('acc');
   const refreshToken = generateToken('ref');
@@ -86,7 +88,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // 2. Auth Endpoint: Refresh Token
-app.post('/api/auth/refresh', (req, res) => {
+router.post('/auth/refresh', (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken || !validRefreshTokens.has(refreshToken)) {
     console.log(`[AUTH] ❌ Invalid refresh token: ${refreshToken}`);
@@ -140,7 +142,7 @@ function verifyToken(req, res, next) {
 }
 
 // 3. GET /api/items (The Table Query)
-app.get('/api/items', verifyToken, (req, res) => {
+router.get('/items', verifyToken, (req, res) => {
   const handleResponse = () => {
     const responseTime = new Date().toISOString();
     res.setHeader('X-Backend-Version', String(mutationCount));
@@ -184,7 +186,7 @@ app.get('/api/items', verifyToken, (req, res) => {
 });
 
 // 4. PUT /api/items/:id (The Table Row Update Mutation)
-app.put('/api/items/:id', verifyToken, (req, res) => {
+router.put('/items/:id', verifyToken, (req, res) => {
   const id = parseInt(req.params.id);
   const itemIndex = items.findIndex(i => i.id === id);
 
@@ -220,16 +222,23 @@ app.put('/api/items/:id', verifyToken, (req, res) => {
 });
 
 // 5. Reset Endpoint
-app.post('/api/reset', (req, res) => {
+router.post('/reset', (req, res) => {
   items = JSON.parse(JSON.stringify(initialItems));
   mutationCount = 0;
   console.log(`[DB] 🔄 Database reset to initial state`);
   res.json({ success: true, message: 'Reset successful' });
 });
 
-app.listen(PORT, () => {
-  console.log(`=================================================`);
-  console.log(`🚀 Prototype API Server running on port ${PORT}`);
-  console.log(`   Config: cacheHeaderMode=${serverConfig.cacheHeaderMode}, getDelayMs=${serverConfig.getDelayMs}`);
-  console.log(`=================================================`);
-});
+app.use('/api', router);
+app.use(router);
+
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`=================================================`);
+    console.log(`🚀 Prototype API Server running on port ${PORT}`);
+    console.log(`   Config: cacheHeaderMode=${serverConfig.cacheHeaderMode}, getDelayMs=${serverConfig.getDelayMs}`);
+    console.log(`=================================================`);
+  });
+}

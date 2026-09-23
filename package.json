@@ -6,6 +6,11 @@
     "dev:server": "node server/server.js",
     "dev:client": "npm run dev --prefix client",
     "build:client": "npm run build --prefix client",
+    "build": "npm run build --prefix client",
     "test": "node test/test-reproduction.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }
